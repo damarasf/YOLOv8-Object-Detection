@@ -9,7 +9,7 @@
 </head>
 <body>
     <header>
-        <h1>🎯 Detection Results</h1>
+        <h1>Detection Results</h1>
         <p>YOLOv8 Object Detection Analysis</p>
     </header>
     
@@ -39,28 +39,28 @@
                          loading="lazy">
                 </div>
             </div>
-            
-            {% if detections %}
+              {% if detections %}
             <div class="detection-results">
                 <h3>📋 Detection Details</h3>
                 <div class="detection-summary">
                     <p><strong>Total Objects:</strong> {{ detections|length }}</p>
-                    <p><strong>Object Types:</strong> {{ detections|map(attribute='class')|unique|list|join(', ') }}</p>
+                    <p><strong>Object Types:</strong> {{ detections|map(attribute='class')|unique|list|join(', ')|title }}</p>
+                    <p><strong>Average Confidence:</strong> {{ "%.1f"|format((detections|map(attribute='confidence')|sum / detections|length)) }}%</p>
                 </div>
                 
-                {% for detection in detections %}
-                <div class="detection-item">
-                    <div class="detection-class">
-                        🏷️ {{ detection.class|title }}
+                <div class="detection-list">
+                    {% for detection in detections %}
+                    <div class="detection-item">
+                        <div class="detection-class">
+                            🏷️ {{ detection.class|title }}
+                            <span class="detection-confidence">{{ detection.confidence }}%</span>
+                        </div>
+                        <div class="detection-coords">
+                            📍 Bounding Box: ({{ detection.bbox[0] }}, {{ detection.bbox[1] }}) → ({{ detection.bbox[2] }}, {{ detection.bbox[3] }})
+                        </div>
                     </div>
-                    <div class="detection-confidence">
-                        Confidence: {{ detection.confidence }}%
-                    </div>
-                    <div class="detection-coords">
-                        Bounding Box: ({{ detection.bbox[0] }}, {{ detection.bbox[1] }}) to ({{ detection.bbox[2] }}, {{ detection.bbox[3] }})
-                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
             {% endif %}
             
@@ -71,14 +71,15 @@
                 <p><strong>Confidence Threshold:</strong> {{ model_info.confidence_threshold }}</p>
                 <p><strong>Supported Classes:</strong> {{ model_info.class_names|length }} object types</p>
             </div>
-            {% endif %}
-            
-            <div style="text-align: center; margin-top: 2rem;">
+            {% endif %}            <div style="text-align: center; margin-top: 2rem;">
                 <a href="{{ url_for('index') }}" class="btn">
                     🔄 Analyze Another Image
                 </a>
                 <button onclick="downloadResults()" class="btn btn-secondary">
                     💾 Download Results
+                </button>
+                <button onclick="toggleComparison()" class="btn btn-success">
+                    🔍 Toggle Comparison View
                 </button>
             </div>
         </div>
@@ -86,16 +87,17 @@
         <div class="result-container">
             <h3>📊 Detection Statistics</h3>
             {% if detections %}
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+            <div class="features-grid">
                 {% set class_counts = {} %}
                 {% for detection in detections %}
                     {% if class_counts.update({detection.class: class_counts.get(detection.class, 0) + 1}) %}{% endif %}
                 {% endfor %}
                 
                 {% for class_name, count in class_counts.items() %}
-                <div style="text-align: center; padding: 1rem; background-color: #f8f9fa; border-radius: 4px;">
-                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">{{ count }}</div>
-                    <strong>{{ class_name|title }}</strong>
+                <div class="feature-card">
+                    <div class="feature-icon">{{ count }}</div>
+                    <h4>{{ class_name|title }}</h4>
+                    <p>{{ 'Object' if count == 1 else 'Objects' }} detected</p>
                 </div>
                 {% endfor %}
             </div>
@@ -153,8 +155,75 @@
             downloadAnchorNode.setAttribute("download", "detection_results_" + new Date().toISOString().slice(0,19).replace(/:/g, '-') + ".json");
             document.body.appendChild(downloadAnchorNode);
             downloadAnchorNode.click();
-            downloadAnchorNode.remove();
+            downloadAnchorNode.remove();        }
+
+        // Toggle comparison view functionality
+        function toggleComparison() {
+            const imageComparison = document.querySelector('.image-comparison');
+            const toggleBtn = document.querySelector('button[onclick="toggleComparison()"]');
+            
+            if (imageComparison.style.display === 'none') {
+                imageComparison.style.display = 'grid';
+                toggleBtn.textContent = '🔍 Hide Comparison View';
+            } else {
+                imageComparison.style.display = 'none';
+                toggleBtn.textContent = '🔍 Show Comparison View';
+            }
         }
+
+        // Add smooth animations and interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate detection items on load
+            const detectionItems = document.querySelectorAll('.detection-item');
+            detectionItems.forEach((item, index) => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    item.style.transition = 'all 0.5s ease-out';
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+
+            // Add click handlers for image zoom
+            const images = document.querySelectorAll('.image-container img');
+            images.forEach(img => {
+                img.style.cursor = 'pointer';
+                img.addEventListener('click', function() {
+                    // Create modal for full-size image view
+                    const modal = document.createElement('div');
+                    modal.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0,0,0,0.9);
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        z-index: 1000;
+                        cursor: pointer;
+                    `;
+                    
+                    const modalImg = document.createElement('img');
+                    modalImg.src = this.src;
+                    modalImg.style.cssText = `
+                        max-width: 90%;
+                        max-height: 90%;
+                        border-radius: 8px;
+                        box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+                    `;
+                    
+                    modal.appendChild(modalImg);
+                    document.body.appendChild(modal);
+                    
+                    modal.addEventListener('click', () => {
+                        document.body.removeChild(modal);
+                    });
+                });
+            });
+        });
     </script>
 </body>
 </html>

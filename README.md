@@ -59,7 +59,7 @@ yolov8-object-detection/
 
 1. **Clone or download the project**
    ```powershell
-   git clone <repository-url>
+   git clone <https://github.com/damarasf/YOLOv8-Object-Detection.git>
    cd yolov8-object-detection
    ```
 

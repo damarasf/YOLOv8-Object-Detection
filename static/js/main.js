@@ -8,6 +8,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const uploadForm = document.getElementById('upload-form');
     const loading = document.getElementById('loading');
     const uploadArea = document.querySelector('.upload-area');
+    const previewContainer = document.querySelector('.preview-container');
+    const previewInfo = document.querySelector('.preview-info');
+    const progressBar = document.querySelector('.progress-bar');
+    const uploadProgress = document.querySelector('.upload-progress');
+
+    // Initialize tooltips and animations
+    initializeAnimations();
 
     // File input change handler
     if (fileInput) {
@@ -24,60 +31,201 @@ document.addEventListener('DOMContentLoaded', function() {
         setupDragAndDrop();
     }
 
+    function initializeAnimations() {
+        // Add entrance animations to elements
+        const containers = document.querySelectorAll('.upload-container, .result-container');
+        containers.forEach((container, index) => {
+            container.style.opacity = '0';
+            container.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                container.style.transition = 'all 0.6s ease-out';
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+            }, index * 200);
+        });
+    }
+
     function handleFileSelection() {
         if (fileInput.files && fileInput.files[0]) {
             const file = fileInput.files[0];
             
             // Validate file size (16MB max)
             if (file.size > 16 * 1024 * 1024) {
-                alert('File size too large. Please select a file smaller than 16MB.');
-                fileInput.value = '';
+                showError('File size too large. Please select a file smaller than 16MB.');
+                resetFileInput();
                 return;
             }
 
             // Validate file type
             const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
             if (!allowedTypes.includes(file.type)) {
-                alert('Invalid file type. Please select a JPG, JPEG, PNG, or GIF image.');
-                fileInput.value = '';
+                showError('Invalid file type. Please select a JPG, JPEG, PNG, or GIF image.');
+                resetFileInput();
                 return;
             }
 
+            // Show progress
+            showProgress();
+            
             const reader = new FileReader();
             
             reader.onload = function(e) {
                 if (imagePreview) {
                     imagePreview.src = e.target.result;
                     imagePreview.style.display = 'inline-block';
+                    
+                    // Show preview container with animation
+                    if (previewContainer) {
+                        previewContainer.classList.add('show');
+                    }
+                    
+                    // Update file info
+                    updateFileInfo(file);
+                    
+                    // Enable submit button with animation
+                    enableSubmitButton();
                 }
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                }
-            }
-            
+                hideProgress();
+            };
+
             reader.onerror = function() {
-                alert('Error reading file. Please try again.');
-                fileInput.value = '';
-            }
+                showError('Error reading file. Please try again.');
+                resetFileInput();
+                hideProgress();
+            };
             
             reader.readAsDataURL(file);
-        } else {
-            if (imagePreview) {
-                imagePreview.style.display = 'none';
-            }
-            if (submitBtn) {
-                submitBtn.disabled = true;
+        }
+    }
+
+    function updateFileInfo(file) {
+        if (previewInfo) {
+            const fileName = document.getElementById('file-name');
+            const fileSize = document.getElementById('file-size');
+            const fileType = document.getElementById('file-type');
+            
+            if (fileName) fileName.textContent = `📄 ${file.name}`;
+            if (fileSize) fileSize.textContent = `📏 ${formatFileSize(file.size)}`;
+            if (fileType) fileType.textContent = `🏷️ ${file.type}`;
+            
+            previewInfo.style.display = 'block';
+        }
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function enableSubmitButton() {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                submitBtn.style.transform = 'scale(1)';
+            }, 200);
+        }
+    }
+
+    function resetFileInput() {
+        if (fileInput) {
+            fileInput.value = '';
+        }
+        if (imagePreview) {
+            imagePreview.style.display = 'none';
+            imagePreview.src = '';
+        }
+        if (previewContainer) {
+            previewContainer.classList.remove('show');
+        }
+        if (previewInfo) {
+            previewInfo.style.display = 'none';
+        }
+        if (submitBtn) {
+            submitBtn.disabled = true;
+        }
+    }
+
+    function showProgress() {
+        if (uploadProgress) {
+            uploadProgress.style.display = 'block';
+            if (progressBar) {
+                progressBar.style.width = '0%';
+                // Simulate progress
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 30;
+                    if (progress >= 90) {
+                        clearInterval(interval);
+                        progress = 90;
+                    }
+                    progressBar.style.width = progress + '%';
+                }, 100);
             }
         }
     }
 
-    function handleFormSubmit() {
-        if (loading) {
-            loading.style.display = 'block';
+    function hideProgress() {
+        if (uploadProgress) {
+            if (progressBar) {
+                progressBar.style.width = '100%';
+            }
+            setTimeout(() => {
+                uploadProgress.style.display = 'none';
+                if (progressBar) {
+                    progressBar.style.width = '0%';
+                }
+            }, 500);
         }
+    }
+
+    function showError(message) {
+        // Create and show error notification
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'flash-message error';
+        errorDiv.innerHTML = `<strong>⚠️ Error:</strong> ${message}`;
+        
+        const flashContainer = document.querySelector('.flash-messages') || createFlashContainer();
+        flashContainer.appendChild(errorDiv);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (errorDiv.parentNode) {
+                errorDiv.style.animation = 'slideOut 0.5s ease-in forwards';
+                setTimeout(() => {
+                    errorDiv.remove();
+                }, 500);
+            }
+        }, 5000);
+    }
+
+    function createFlashContainer() {
+        const container = document.createElement('div');
+        container.className = 'flash-messages';
+        const mainContent = document.querySelector('main');
+        if (mainContent) {
+            mainContent.insertBefore(container, mainContent.firstChild);
+        }
+        return container;
+    }
+
+    function handleFormSubmit(e) {
         if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Processing...';
+        }
+        
+        if (loading) {
+            loading.style.display = 'block';
+            loading.style.animation = 'fadeIn 0.5s ease-out';
+        }
+        
+        // Add loading state to upload area
+        if (uploadArea) {
+            uploadArea.style.opacity = '0.5';
+            uploadArea.style.pointerEvents = 'none';
         }
     }
 
@@ -88,11 +236,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.addEventListener(eventName, preventDefaults, false);
         });
 
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
         // Highlight drop area when item is dragged over it
         ['dragenter', 'dragover'].forEach(eventName => {
             uploadArea.addEventListener(eventName, highlight, false);
@@ -102,18 +245,21 @@ document.addEventListener('DOMContentLoaded', function() {
             uploadArea.addEventListener(eventName, unhighlight, false);
         });
 
+        // Handle dropped files
+        uploadArea.addEventListener('drop', handleDrop, false);
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
         function highlight() {
-            uploadArea.style.borderColor = '#2980b9';
-            uploadArea.style.backgroundColor = '#f0f7ff';
+            uploadArea.classList.add('dragover');
         }
 
         function unhighlight() {
-            uploadArea.style.borderColor = '#3498db';
-            uploadArea.style.backgroundColor = '';
+            uploadArea.classList.remove('dragover');
         }
-
-        // Handle dropped files
-        uploadArea.addEventListener('drop', handleDrop, false);
 
         function handleDrop(e) {
             const dt = e.dataTransfer;
@@ -121,53 +267,72 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (files.length > 0) {
                 fileInput.files = files;
-                
-                // Trigger the change event
-                const event = new Event('change', { bubbles: true });
-                fileInput.dispatchEvent(event);
+                handleFileSelection();
             }
         }
     }
-
-    // Auto-hide flash messages after 5 seconds
-    const flashMessages = document.querySelectorAll('.flash-message');
-    flashMessages.forEach(message => {
-        setTimeout(() => {
-            message.style.opacity = '0';
-            setTimeout(() => {
-                message.remove();
-            }, 300);
-        }, 5000);
-    });
 });
 
-// Utility functions
-function formatBytes(bytes, decimals = 2) {
-    if (bytes === 0) return '0 Bytes';
-
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+// Additional utility functions for result page
+function downloadResults() {
+    const resultImage = document.querySelector('.image-container img[alt*="Detection Results"]');
+    if (resultImage) {
+        const link = document.createElement('a');
+        link.download = 'yolov8-detection-results.png';
+        link.href = resultImage.src;
+        link.click();
+    }
 }
 
+// Notification system
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `flash-message ${type}`;
-    notification.textContent = message;
     
-    const container = document.querySelector('.flash-messages') || document.querySelector('main');
-    if (container) {
-        container.insertBefore(notification, container.firstChild);
-        
-        setTimeout(() => {
-            notification.style.opacity = '0';
+    const icon = type === 'error' ? '⚠️' : type === 'success' ? '✅' : 'ℹ️';
+    notification.innerHTML = `<strong>${icon}</strong> ${message}`;
+    
+    const flashContainer = document.querySelector('.flash-messages') || createFlashContainer();
+    flashContainer.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.animation = 'slideOut 0.5s ease-in forwards';
             setTimeout(() => {
                 notification.remove();
-            }, 300);
-        }, 3000);
-    }
+            }, 500);
+        }
+    }, 5000);
 }
+
+function createFlashContainer() {
+    const container = document.createElement('div');
+    container.className = 'flash-messages';
+    const uploadContainer = document.querySelector('.upload-container');
+    if (uploadContainer) {
+        uploadContainer.insertBefore(container, uploadContainer.firstChild);
+    }
+    return container;
+}
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideOut {
+        from { 
+            opacity: 1; 
+            transform: translateX(0); 
+        }
+        to { 
+            opacity: 0; 
+            transform: translateX(-20px); 
+        }
+    }
+`;
+document.head.appendChild(style);
