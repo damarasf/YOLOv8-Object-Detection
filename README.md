@@ -263,7 +263,3 @@ For support and questions:
 - Create an issue in the repository
 - Check the documentation
 - Review the error logs in `logs/app.log`
-
----
-
-Built with ❤️ for the AI and computer vision community.
