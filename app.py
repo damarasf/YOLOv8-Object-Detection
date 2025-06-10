@@ -1,131 +1,85 @@
+"""
+YOLOv8 Object Detection Web Application
+
+A Flask web application for object detection using YOLOv8.
+This application allows users to upload images and get object detection results.
+"""
 import os
-import uuid
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
-from PIL import Image
-import numpy as np
-from ultralytics import YOLO
+from flask import Flask, render_template
+from config import config
+from models import ObjectDetector
+from routes import Routes, APIRoutes
+from utils import setup_logging, cleanup_old_files
 
-# Initialize the Flask application
-app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Change this to a random secret key in production
 
-# Configure upload folder
-UPLOAD_FOLDER = os.path.join('static', 'uploads')
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Disable caching for development
-
-# Ensure upload directory exists
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-# Load the YOLOv8 model
-model = YOLO('yolov8n.pt')  # Using the nano model for speed, change to yolov8s.pt, yolov8m.pt, etc. for better accuracy
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
-@app.route('/detect', methods=['POST'])
-def detect_objects():
-    if 'file' not in request.files:
-        flash('No file part')
-        return redirect(request.url)
+def create_app(config_name=None):
+    """
+    Application factory pattern
     
-    file = request.files['file']
+    Args:
+        config_name (str): Configuration environment name
+        
+    Returns:
+        Flask: Configured Flask application
+    """
+    # Create Flask app
+    app = Flask(__name__)
     
-    if file.filename == '':
-        flash('No selected file')
-        return redirect(request.url)
+    # Load configuration
+    config_name = config_name or os.environ.get('FLASK_ENV', 'default')
+    app_config = config[config_name]
+    app.config.from_object(app_config)
     
-    if file and allowed_file(file.filename):
-        # Generate a unique filename
-        filename = str(uuid.uuid4()) + os.path.splitext(file.filename)[1]
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        
-        # Save the uploaded file
-        file.save(filepath)
-        
-        # Process the image with YOLOv8
-        results = model(filepath)
-        
-        # Get the first result (should only be one image)
-        result = results[0]
-          # Save the result with annotations
-        result_filename = 'result_' + filename
-        result_path = os.path.join(app.config['UPLOAD_FOLDER'], result_filename)
-        
-        # Plot the result and save
-        result_img = result.plot()  # This returns the image with annotations
-        result_pil = Image.fromarray(result_img)
-        result_pil.save(result_path)
-        
-        # Make sure the file is written to disk
-        try:
-            os.chmod(result_path, 0o644)  # Make sure the file is readable
-        except Exception as e:
-            print(f"Warning: Could not set permissions on result image: {e}")
-        
-        # Debug information
-        print(f"Original image path: {filepath}")
-        print(f"Result image path: {result_path}")
-        print(f"URL original: uploads/{filename}")
-        print(f"URL result: uploads/{result_filename}")
-        
-        # Get detection results (class names, confidence scores, bounding boxes)
-        detections = []
-        if result.boxes is not None and len(result.boxes) > 0:
-            for box in result.boxes:
-                class_id = int(box.cls[0].item())
-                class_name = result.names[class_id]
-                confidence = round(float(box.conf[0].item()) * 100, 2)  # Convert to percentage
-                
-                # Get coordinates of the bounding box
-                x1, y1, x2, y2 = [round(float(x)) for x in box.xyxy[0].tolist()]
-                
-                detections.append({
-                    'class': class_name,
-                    'confidence': confidence,
-                    'bbox': [x1, y1, x2, y2]
-                })
-          # Return the template with detection results
-        response = render_template('result.html', 
-                              original_img=f"uploads/{filename}",
-                              result_img=f"uploads/{result_filename}",
-                              detections=detections)
-        
-        # Add no-cache headers to the response
-        return response
+    # Setup logging
+    setup_logging(app, app_config.LOG_LEVEL, app_config.LOG_FILE)
+    app.logger.info(f"Application started with {config_name} configuration")
     
-    flash('Invalid file type. Please upload a JPG, JPEG, or PNG image.')
-    return redirect(url_for('index'))
+    # Ensure required directories exist
+    os.makedirs(app_config.UPLOAD_FOLDER, exist_ok=True)
+    os.makedirs(os.path.dirname(app_config.MODEL_PATH), exist_ok=True)
+    
+    # Initialize object detector
+    detector = ObjectDetector(
+        model_path=app_config.MODEL_PATH,
+        confidence_threshold=app_config.MODEL_CONFIDENCE_THRESHOLD
+    )
+    
+    # Register routes
+    Routes(app, detector, app_config)
+    APIRoutes(app, detector, app_config)
+    
+    # Error handlers
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template('error.html'), 404
+    
+    @app.errorhandler(500)
+    def internal_error(error):
+        app.logger.error(f"Internal server error: {error}")
+        return render_template('error.html'), 500
+    
+    @app.errorhandler(413)
+    def request_entity_too_large(error):
+        return render_template('error.html'), 413
+    
+    # Cleanup old files on startup
+    cleanup_old_files(app_config.UPLOAD_FOLDER, max_age_hours=24)
+    
+    app.logger.info("Application initialization completed")
+    return app
 
-# Add a route to serve all static files with no caching
-@app.route('/static/<path:filename>')
-def serve_static(filename):
-    response = send_from_directory('static', filename)
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-    response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '0'
-    return response
+
+def main():
+    """Main entry point"""
+    app = create_app()
+    
+    # Run the application
+    app.run(
+        debug=app.config.get('DEBUG', False),
+        host='0.0.0.0',
+        port=int(os.environ.get('PORT', 5000))
+    )
+
 
 if __name__ == '__main__':
-    # Download the model if it doesn't exist
-    if not os.path.exists('yolov8n.pt'):
-        model.download('yolov8n.pt')
-    
-    # Clear existing files in uploads directory for testing
-    for file in os.listdir(UPLOAD_FOLDER):
-        try:
-            os.remove(os.path.join(UPLOAD_FOLDER, file))
-            print(f"Removed old file: {file}")
-        except Exception as e:
-            print(f"Error removing file {file}: {e}")
-    
-    app.run(debug=True)
+    main()

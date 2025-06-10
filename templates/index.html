@@ -4,50 +4,85 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YOLOv8 Object Detection</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f7f9fc;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        
-        header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 1rem 0;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        h1 {
-            margin: 0;
-            font-size: 2rem;
-        }
-        
-        main {
-            flex: 1;
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        
-        .upload-container {
-            background-color: white;
-            border-radius: 8px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            text-align: center;
-        }
-        
-        .upload-area {
-            border: 2px dashed #3498db;
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+</head>
+<body>
+    <header>
+        <h1>🔍 YOLOv8 Object Detection</h1>
+        <p>Upload an image to detect objects using advanced AI</p>
+    </header>
+    
+    <main>
+        <div class="upload-container">
+            <h2>Upload an Image for Object Detection</h2>
+            <p>Supported formats: JPG, JPEG, PNG, GIF (Max size: 16MB)</p>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="flash-message {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            
+            <form action="{{ url_for('detect_objects') }}" method="post" enctype="multipart/form-data" id="upload-form">
+                <div class="upload-area">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📁</div>
+                    <input type="file" id="file-input" name="file" accept=".jpg,.jpeg,.png,.gif" required>
+                    <div class="upload-text">Drag & Drop or Click to Upload</div>
+                    <div class="file-info">Maximum file size: 16MB</div>
+                </div>
+                
+                <div class="preview-container">
+                    <img id="image-preview" alt="Image preview">
+                </div>
+                
+                <button type="submit" id="submit-btn" disabled>
+                    🚀 Detect Objects
+                </button>
+                
+                <div class="loading" id="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Processing image with YOLOv8...</p>
+                    <p><small>This may take a few seconds...</small></p>
+                </div>
+            </form>
+        </div>
+
+        <div class="upload-container">
+            <h3>About YOLOv8 Object Detection</h3>
+            <p>This application uses YOLOv8 (You Only Look Once version 8), a state-of-the-art real-time object detection system. It can identify and locate multiple objects in images with high accuracy and speed.</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                <div style="text-align: center; padding: 1rem; background-color: #f8f9fa; border-radius: 4px;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚡</div>
+                    <strong>Fast Processing</strong>
+                    <p style="font-size: 0.9rem; margin: 0.5rem 0 0 0;">Real-time object detection</p>
+                </div>
+                <div style="text-align: center; padding: 1rem; background-color: #f8f9fa; border-radius: 4px;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎯</div>
+                    <strong>High Accuracy</strong>
+                    <p style="font-size: 0.9rem; margin: 0.5rem 0 0 0;">Precise object localization</p>
+                </div>
+                <div style="text-align: center; padding: 1rem; background-color: #f8f9fa; border-radius: 4px;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🏷️</div>
+                    <strong>80+ Classes</strong>
+                    <p style="font-size: 0.9rem; margin: 0.5rem 0 0 0;">Recognizes common objects</p>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p>Powered by YOLOv8 and Flask | Built with ❤️ for AI enthusiasts</p>
+    </footer>
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
             border-radius: 5px;
             padding: 3rem 1rem;
             margin: 1.5rem 0;

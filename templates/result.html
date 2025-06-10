@@ -4,259 +4,156 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detection Results - YOLOv8 Object Detection</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f7f9fc;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        
-        header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 1rem 0;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        h1 {
-            margin: 0;
-            font-size: 2rem;
-        }
-        
-        main {
-            flex: 1;
-            max-width: 1000px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        
-        .results-container {
-            background-color: white;
-            border-radius: 8px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-        
-        .results-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        
-        .image-comparison {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 2rem;
-            justify-content: center;
-            margin-bottom: 2rem;
-        }
-        
-        .image-card {
-            flex: 1;
-            min-width: 300px;
-            max-width: 500px;
-            background-color: #f7f9fc;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        
-        .image-card h3 {
-            background-color: #3498db;
-            color: white;
-            margin: 0;
-            padding: 0.75rem;
-            text-align: center;
-            font-size: 1.1rem;
-        }
-        
-        .image-container {
-            padding: 1rem;
-            text-align: center;
-        }
-        
-        .image-container img {
-            max-width: 100%;
-            max-height: 400px;
-            border-radius: 4px;
-        }
-        
-        .detection-results {
-            margin-top: 2rem;
-        }
-        
-        .detection-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-        
-        .detection-table th, .detection-table td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #e1e5e8;
-        }
-        
-        .detection-table th {
-            background-color: #f1f4f7;
-            font-weight: 600;
-        }
-        
-        .detection-table tr:hover {
-            background-color: #f9fbff;
-        }
-        
-        .confidence-badge {
-            display: inline-block;
-            padding: 0.25rem 0.5rem;
-            font-size: 0.85rem;
-            font-weight: 600;
-            border-radius: 9999px;
-            background-color: #e1f5fe;
-            color: #0288d1;
-        }
-        
-        .action-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-        
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 4px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .btn-primary {
-            background-color: #3498db;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: #2980b9;
-        }
-        
-        .btn-secondary {
-            background-color: #7f8c8d;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #6c7a7d;
-        }
-        
-        .no-detections {
-            text-align: center;
-            padding: 2rem;
-            background-color: #f9f9f9;
-            border-radius: 8px;
-            color: #7f8c8d;
-        }
-        
-        footer {
-            background-color: #2c3e50;
-            color: white;
-            text-align: center;
-            padding: 1rem 0;
-            margin-top: auto;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
 </head>
 <body>
     <header>
-        <h1>YOLOv8 Object Detection</h1>
+        <h1>🎯 Detection Results</h1>
+        <p>YOLOv8 Object Detection Analysis</p>
     </header>
     
     <main>
-        <div class="results-container">
+        <div class="result-container">
             <div class="results-header">
-                <h2>Detection Results</h2>
-                <p>YOLOv8 has analyzed your image and identified the following objects:</p>
-            </div>
-            
-            <div class="image-comparison">                <div class="image-card">
-                    <h3>Original Image</h3>
-                    <div class="image-container">
-                        <img src="{{ url_for('static', filename=original_img) }}?cache={{ range(1, 9999) | random }}" alt="Original Image">
-                    </div>
-                </div>
-                
-                <div class="image-card">
-                    <h3>Detected Objects</h3>
-                    <div class="image-container">
-                        <img src="{{ url_for('static', filename=result_img) }}?cache={{ range(1, 9999) | random }}" alt="Detection Results">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="detection-results">
-                <h3>Detected Objects:</h3>
-                
+                <h2>Object Detection Complete!</h2>
                 {% if detections %}
-                    <table class="detection-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Object</th>
-                                <th>Confidence</th>
-                                <th>Bounding Box (x1, y1, x2, y2)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for detection in detections %}
-                                <tr>
-                                    <td>{{ loop.index }}</td>
-                                    <td>{{ detection.class }}</td>
-                                    <td>
-                                        <span class="confidence-badge">{{ detection.confidence }}%</span>
-                                    </td>
-                                    <td>{{ detection.bbox }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                    <p>Found <strong>{{ detections|length }}</strong> object(s) in your image</p>
                 {% else %}
-                    <div class="no-detections">
-                        <p>No objects were detected in this image.</p>
-                    </div>
+                    <p>No objects detected in the image</p>
                 {% endif %}
-            </div>            <div class="action-buttons">
-                <a href="{{ url_for('index') }}" class="btn btn-primary">Try Another Image</a>
-                <a href="{{ url_for('static', filename=result_img) }}?cache={{ range(1, 9999) | random }}" download class="btn btn-secondary">Download Result</a>
-                <a href="javascript:window.location.reload()" class="btn btn-secondary">Refresh Image</a>
+            </div>
+            
+            <div class="image-comparison">
+                <div class="image-container">
+                    <h3>📷 Original Image</h3>
+                    <img src="{{ url_for('uploaded_file', filename=original_img.split('/')[-1]) }}" 
+                         alt="Original uploaded image" 
+                         loading="lazy">
+                </div>
+                
+                <div class="image-container">
+                    <h3>🎯 Detection Results</h3>
+                    <img src="{{ url_for('uploaded_file', filename=result_img.split('/')[-1]) }}" 
+                         alt="Image with detected objects highlighted" 
+                         loading="lazy">
+                </div>
+            </div>
+            
+            {% if detections %}
+            <div class="detection-results">
+                <h3>📋 Detection Details</h3>
+                <div class="detection-summary">
+                    <p><strong>Total Objects:</strong> {{ detections|length }}</p>
+                    <p><strong>Object Types:</strong> {{ detections|map(attribute='class')|unique|list|join(', ') }}</p>
+                </div>
+                
+                {% for detection in detections %}
+                <div class="detection-item">
+                    <div class="detection-class">
+                        🏷️ {{ detection.class|title }}
+                    </div>
+                    <div class="detection-confidence">
+                        Confidence: {{ detection.confidence }}%
+                    </div>
+                    <div class="detection-coords">
+                        Bounding Box: ({{ detection.bbox[0] }}, {{ detection.bbox[1] }}) to ({{ detection.bbox[2] }}, {{ detection.bbox[3] }})
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            {% if model_info %}
+            <div class="model-info">
+                <h4>🤖 Model Information</h4>
+                <p><strong>Model:</strong> {{ model_info.model_path.split('/')[-1] }}</p>
+                <p><strong>Confidence Threshold:</strong> {{ model_info.confidence_threshold }}</p>
+                <p><strong>Supported Classes:</strong> {{ model_info.class_names|length }} object types</p>
+            </div>
+            {% endif %}
+            
+            <div style="text-align: center; margin-top: 2rem;">
+                <a href="{{ url_for('index') }}" class="btn">
+                    🔄 Analyze Another Image
+                </a>
+                <button onclick="downloadResults()" class="btn btn-secondary">
+                    💾 Download Results
+                </button>
             </div>
         </div>
+
+        <div class="result-container">
+            <h3>📊 Detection Statistics</h3>
+            {% if detections %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                {% set class_counts = {} %}
+                {% for detection in detections %}
+                    {% if class_counts.update({detection.class: class_counts.get(detection.class, 0) + 1}) %}{% endif %}
+                {% endfor %}
+                
+                {% for class_name, count in class_counts.items() %}
+                <div style="text-align: center; padding: 1rem; background-color: #f8f9fa; border-radius: 4px;">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">{{ count }}</div>
+                    <strong>{{ class_name|title }}</strong>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div style="margin-top: 1rem;">
+                <p><strong>Average Confidence:</strong> 
+                {{ "%.1f"|format(detections|map(attribute='confidence')|sum / detections|length) }}%
+                </p>
+            </div>
+            {% else %}
+            <p style="text-align: center; color: #7f8c8d;">
+                No objects were detected in this image. Try uploading a different image with more common objects.
+            </p>
+            {% endif %}
+        </div>
     </main>
-      <footer>
-        <p>Powered by YOLOv8 and Flask</p>
-    </footer>
     
+    <footer>
+        <p>Powered by YOLOv8 and Flask | Built with ❤️ for AI enthusiasts</p>
+    </footer>
+      <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
-        // Force images to reload bypassing cache
-        window.onload = function() {
-            const images = document.querySelectorAll('img');
-            images.forEach(img => {
-                const src = img.src;
-                if (src.indexOf('?') > -1) {
-                    img.src = src;
-                } else {
-                    img.src = src + '?cache=' + Math.random();
+        function downloadResults() {
+            // Get data from the page elements
+            const detectionsElements = document.querySelectorAll('.detection-item');
+            const detections = [];
+            
+            detectionsElements.forEach(item => {
+                const classElement = item.querySelector('.detection-class');
+                const confidenceElement = item.querySelector('.detection-confidence');
+                const coordsElement = item.querySelector('.detection-coords');
+                
+                if (classElement && confidenceElement && coordsElement) {
+                    const className = classElement.textContent.replace('🏷️ ', '').trim();
+                    const confidence = parseFloat(confidenceElement.textContent.match(/[\d.]+/)[0]);
+                    const coords = coordsElement.textContent.match(/\d+/g).map(num => parseInt(num));
+                    
+                    detections.push({
+                        class: className,
+                        confidence: confidence,
+                        bbox: coords
+                    });
                 }
             });
+            
+            const resultsData = {
+                timestamp: new Date().toISOString(),
+                total_objects: detections.length,
+                detections: detections
+            };
+            
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resultsData, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "detection_results_" + new Date().toISOString().slice(0,19).replace(/:/g, '-') + ".json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
         }
     </script>
 </body>

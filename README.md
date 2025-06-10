@@ -1,159 +1,269 @@
 # YOLOv8 Object Detection Web Application
 
-This is a web application that allows users to upload images and perform object detection using YOLOv8, a state-of-the-art real-time object detection model. The application provides a clean and intuitive interface for detecting objects in images with high accuracy.
+A modern Flask web application for object detection using YOLOv8 (You Only Look Once version 8). This application provides an intuitive web interface for uploading images and getting real-time object detection results with bounding boxes and confidence scores.
 
-![YOLOv8 Object Detection](https://raw.githubusercontent.com/ultralytics/assets/main/yolov8/yolo-comparison-plots.png)
+## 🌟 Features
 
-## Features
+- **Real-time Object Detection**: Powered by YOLOv8 for fast and accurate object detection
+- **Web Interface**: Clean, modern, responsive web UI
+- **Drag & Drop Upload**: Easy file upload with drag-and-drop support
+- **80+ Object Classes**: Detects common objects like people, vehicles, animals, and more
+- **API Endpoints**: RESTful API for programmatic access
+- **Result Download**: Export detection results as JSON
+- **Mobile Friendly**: Responsive design works on all devices
+- **Error Handling**: Comprehensive error handling and logging
 
-- **User-friendly web interface** with modern, responsive design
-- **Drag and drop image upload** functionality
-- **Real-time object detection** using YOLOv8
-- **Interactive results display** showing:
-  - Original uploaded image
-  - Annotated image with detected objects
-  - Detailed table of detections with confidence scores
-- **Download functionality** for the annotated images
-- **Caching control** to ensure latest results are always displayed
-- **Cross-platform compatibility** with modern web browsers
+## 🏗️ Project Structure
 
-## Requirements
+```
+yolov8-object-detection/
+├── app.py                     # Main application entry point
+├── config/                    # Configuration management
+│   ├── __init__.py
+│   └── settings.py           # App settings and configuration
+├── models/                    # AI model handling
+│   ├── __init__.py
+│   ├── detector.py           # YOLOv8 model wrapper
+│   └── yolov8n.pt           # Model weights (downloaded automatically)
+├── routes/                    # Application routes
+│   ├── __init__.py
+│   ├── main.py              # Main web routes
+│   └── api.py               # API endpoints
+├── utils/                     # Utility functions
+│   ├── __init__.py
+│   ├── file_handler.py      # File upload and validation
+│   └── logger.py            # Logging configuration
+├── templates/                 # HTML templates
+│   ├── index.html           # Home page
+│   ├── result.html          # Results page
+│   └── error.html           # Error page
+├── static/                    # Static assets
+│   ├── css/
+│   │   └── main.css         # Main stylesheet
+│   ├── js/
+│   │   └── main.js          # JavaScript functionality
+│   └── uploads/             # Uploaded images storage
+├── logs/                      # Application logs
+├── requirements.txt           # Python dependencies
+└── README.md                 # This file
+```
 
-- Python 3.8+
-- Flask
-- Ultralytics YOLOv8
-- Pillow
-- NumPy
+## 🚀 Quick Start
 
-## Installation
+### Prerequisites
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/damarasf/YOLOv8-Object-Detection.git
-   cd YOLOv8-Object-Detection
+- Python 3.8 or higher
+- pip (Python package installer)
+
+### Installation
+
+1. **Clone or download the project**
+   ```powershell
+   git clone <repository-url>
+   cd yolov8-object-detection
    ```
 
-2. Create a virtual environment (recommended):
-   ```bash
-   python -m venv venv
-   ```
-
-3. Activate the virtual environment:
-   - On Windows:
-     ```bash
-     venv\Scripts\activate
-     ```
-   - On macOS/Linux:
-     ```bash
-     source venv/bin/activate
-     ```
-
-4. Install the required dependencies:
-   ```bash
+2. **Install dependencies**
+   ```powershell
    pip install -r requirements.txt
    ```
 
-## Usage
-
-1. Start the Flask application:
-   ```bash
+3. **Run the application**
+   ```powershell
    python app.py
    ```
 
-2. Open your web browser and navigate to:
-   ```
-   http://127.0.0.1:5000/
-   ```
+4. **Open your browser**
+   Navigate to `http://localhost:5000`
 
-3. Upload an image using the web interface:
-   - Click on the upload area or drag and drop an image file
-   - Supported formats: JPG, JPEG, PNG
-   - Wait for the detection process to complete
+### Docker Installation (Optional)
 
-4. View the detection results, including:
-   - Original image (left panel)
-   - Image with bounding boxes (right panel)
-   - Table showing detected objects with class names and confidence scores
-   - Option to download the annotated image or try another image
+```dockerfile
+# Create a Dockerfile
+FROM python:3.9-slim
 
-## How It Works
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
-1. **Image Upload**: The user uploads an image through the web interface
-2. **Backend Processing**: The Flask server processes the image using YOLOv8
-3. **Object Detection**: YOLOv8 identifies objects in the image, their classes, and confidence scores
-4. **Visualization**: Bounding boxes are drawn around detected objects
-5. **Results Display**: The web interface shows the original image, annotated image, and detection details
+COPY . .
 
-## YOLOv8 Models
-
-By default, the application uses the YOLOv8n (nano) model for faster inference. You can change this in the `app.py` file to use other variants for better accuracy:
-
-| Model | Size (pixels) | mAP val | Speed CPU (ms) | Speed A100 (ms) | Parameters (M) |
-|-------|---------------|---------|---------------|-----------------|---------------|
-| YOLOv8n | 640 | 37.3 | 80.4 | 0.99 | 3.2 |
-| YOLOv8s | 640 | 44.9 | 128.4 | 1.20 | 11.2 |
-| YOLOv8m | 640 | 50.2 | 234.7 | 1.83 | 25.9 |
-| YOLOv8l | 640 | 52.9 | 375.2 | 2.39 | 43.7 |
-| YOLOv8x | 640 | 53.9 | 479.1 | 3.53 | 68.2 |
-
-To change the model, modify this line in `app.py`:
-
-```python
-# Load the YOLOv8 model
-model = YOLO('yolov8n.pt')  # Change to 'yolov8s.pt', 'yolov8m.pt', etc.
+EXPOSE 5000
+CMD ["python", "app.py"]
 ```
 
-## Project Structure
-
-```
-├── app.py                  # Main Flask application
-├── requirements.txt        # Dependencies list
-├── static/                 # Static files
-│   └── uploads/            # Storage for uploaded and processed images
-├── templates/              # HTML templates
-│   ├── index.html          # Homepage with upload interface
-│   └── result.html         # Results page
-└── .gitignore              # Git ignore file
+```powershell
+docker build -t yolov8-detector .
+docker run -p 5000:5000 yolov8-detector
 ```
 
-## Technologies Used
+## 🎯 Usage
 
-- **Backend**: Python, Flask
-- **Object Detection**: Ultralytics YOLOv8
-- **Image Processing**: Pillow, NumPy
-- **Frontend**: HTML, CSS, JavaScript
-- **Web Interface**: Responsive design with modern CSS
+### Web Interface
 
-## Troubleshooting
+1. **Upload Image**: Drag and drop or click to upload an image (JPG, PNG, GIF)
+2. **Detect Objects**: Click "Detect Objects" to analyze the image
+3. **View Results**: See detected objects with bounding boxes and confidence scores
+4. **Download Results**: Export detection data as JSON
 
-- **Images not displaying**: Try refreshing the page or clearing your browser cache
-- **Model loading errors**: Ensure you have downloaded the YOLOv8 model file to the project root directory
-- **Dependencies issues**: Make sure you have installed all required packages from requirements.txt
-- **Upload errors**: Verify that you're using a supported image format (JPG, JPEG, PNG)
+### API Endpoints
 
-## Future Enhancements
+#### Health Check
+```powershell
+curl http://localhost:5000/api/health
+```
 
-- Real-time object detection from webcam
-- Support for video file analysis
-- Multiple model selection from the web interface
-- Batch processing of multiple images
-- Custom object detection training interface
+#### Model Information
+```powershell
+curl http://localhost:5000/api/model-info
+```
 
-## License
+#### Object Detection
+```powershell
+curl -X POST -F "file=@image.jpg" http://localhost:5000/api/detect
+```
+
+Example API response:
+```json
+{
+  "success": true,
+  "data": {
+    "filename": "unique_filename.jpg",
+    "total_objects": 3,
+    "detections": [
+      {
+        "class": "person",
+        "confidence": 89.5,
+        "bbox": [100, 150, 300, 450],
+        "class_id": 0
+      }
+    ]
+  }
+}
+```
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+- `FLASK_ENV`: Environment mode (`development`, `production`)
+- `SECRET_KEY`: Flask secret key for sessions
+- `PORT`: Application port (default: 5000)
+
+### Configuration Files
+
+Edit `config/settings.py` to customize:
+
+- Model confidence threshold
+- Upload folder location
+- Maximum file size
+- Logging settings
+- Model path
+
+## 🔧 Development
+
+### Project Architecture
+
+The application follows a modular architecture with clear separation of concerns:
+
+- **Configuration**: Centralized settings management
+- **Models**: AI model abstraction and handling
+- **Routes**: Web routes and API endpoints
+- **Utils**: Utility functions and helpers
+- **Templates**: HTML templates with modern design
+- **Static**: CSS, JavaScript, and asset files
+
+### Code Quality
+
+The codebase includes:
+
+- Type hints and docstrings
+- Comprehensive error handling
+- Logging throughout the application
+- Input validation and sanitization
+- Responsive design patterns
+
+### Adding New Features
+
+1. **New Routes**: Add to `routes/main.py` or `routes/api.py`
+2. **Model Changes**: Modify `models/detector.py`
+3. **UI Updates**: Update templates and static files
+4. **Configuration**: Add settings to `config/settings.py`
+
+## 📊 Supported Object Classes
+
+YOLOv8 can detect 80 different object classes including:
+
+- **People**: person
+- **Vehicles**: car, motorcycle, airplane, bus, train, truck, boat
+- **Animals**: bird, cat, dog, horse, sheep, cow, elephant, bear, zebra, giraffe
+- **Sports**: frisbee, skis, snowboard, sports ball, kite, baseball bat, baseball glove, skateboard, surfboard, tennis racket
+- **Kitchen**: bottle, wine glass, cup, fork, knife, spoon, bowl, banana, apple, sandwich, orange, broccoli, carrot, hot dog, pizza, donut, cake
+- **Furniture**: chair, couch, potted plant, bed, dining table, toilet, tv, laptop, mouse, remote, keyboard, cell phone, microwave, oven, toaster, sink, refrigerator
+- **Electronics**: clock, vase, scissors, teddy bear, hair drier, toothbrush
+
+## 🚨 Error Handling
+
+The application includes comprehensive error handling for:
+
+- Invalid file formats
+- File size limits
+- Model loading failures
+- Network errors
+- Server errors
+
+All errors are logged and user-friendly error messages are displayed.
+
+## 📈 Performance
+
+- **Fast Detection**: Uses YOLOv8 nano model for speed
+- **Efficient Processing**: Optimized image handling
+- **Caching**: Static file caching for better performance
+- **Cleanup**: Automatic cleanup of old uploaded files
+
+## 🔒 Security
+
+- File type validation
+- File size limits
+- Secure filename handling
+- Input sanitization
+- Error message sanitization
+
+## 📝 Logging
+
+Logs are stored in the `logs/` directory and include:
+
+- Application startup/shutdown
+- User uploads and detections
+- Errors and warnings
+- Performance metrics
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
-- This application uses [Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics) for object detection
-- Built with [Flask](https://flask.palletsprojects.com/)
-- Inspired by the YOLO (You Only Look Once) family of object detection models
-- Special thanks to the open-source community for their contributions to computer vision
+- [Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics) for the object detection model
+- [Flask](https://flask.palletsprojects.com/) for the web framework
+- The open-source community for various tools and libraries
 
-## Author
+## 📞 Support
 
-- [Damara Satya Fadhilah](https://github.com/damarasf)
+For support and questions:
 
-## Contributing
+- Create an issue in the repository
+- Check the documentation
+- Review the error logs in `logs/app.log`
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+---
+
+Built with ❤️ for the AI and computer vision community.

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Error{% endblock %} - YOLOv8 Object Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+</head>
+<body>
+    <header>
+        <h1>{% block header %}❌ Error{% endblock %}</h1>
+    </header>
+    
+    <main>
+        <div class="upload-container" style="text-align: center;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">
+                {% block error_icon %}⚠️{% endblock %}
+            </div>
+            
+            <h2>{% block error_title %}Oops! Something went wrong{% endblock %}</h2>
+            
+            <p>{% block error_message %}
+                We encountered an error while processing your request. 
+                Please try again or contact support if the problem persists.
+            {% endblock %}</p>
+            
+            <div style="margin-top: 2rem;">
+                <a href="{{ url_for('index') }}" class="btn">
+                    🏠 Go Home
+                </a>
+                <button onclick="history.back()" class="btn btn-secondary">
+                    ↩️ Go Back
+                </button>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p>Powered by YOLOv8 and Flask | Built with ❤️ for AI enthusiasts</p>
+    </footer>
+</body>
+</html>
