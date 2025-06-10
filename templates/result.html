@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detection Results - YOLOv8 Object Detection</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f9fc;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem 0;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+        
+        main {
+            flex: 1;
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .results-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        
+        .results-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .image-comparison {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        
+        .image-card {
+            flex: 1;
+            min-width: 300px;
+            max-width: 500px;
+            background-color: #f7f9fc;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .image-card h3 {
+            background-color: #3498db;
+            color: white;
+            margin: 0;
+            padding: 0.75rem;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        
+        .image-container {
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .image-container img {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 4px;
+        }
+        
+        .detection-results {
+            margin-top: 2rem;
+        }
+        
+        .detection-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .detection-table th, .detection-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e1e5e8;
+        }
+        
+        .detection-table th {
+            background-color: #f1f4f7;
+            font-weight: 600;
+        }
+        
+        .detection-table tr:hover {
+            background-color: #f9fbff;
+        }
+        
+        .confidence-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            background-color: #e1f5fe;
+            color: #0288d1;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-secondary {
+            background-color: #7f8c8d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #6c7a7d;
+        }
+        
+        .no-detections {
+            text-align: center;
+            padding: 2rem;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            color: #7f8c8d;
+        }
+        
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 1rem 0;
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>YOLOv8 Object Detection</h1>
+    </header>
+    
+    <main>
+        <div class="results-container">
+            <div class="results-header">
+                <h2>Detection Results</h2>
+                <p>YOLOv8 has analyzed your image and identified the following objects:</p>
+            </div>
+            
+            <div class="image-comparison">                <div class="image-card">
+                    <h3>Original Image</h3>
+                    <div class="image-container">
+                        <img src="{{ url_for('static', filename=original_img) }}?cache={{ range(1, 9999) | random }}" alt="Original Image">
+                    </div>
+                </div>
+                
+                <div class="image-card">
+                    <h3>Detected Objects</h3>
+                    <div class="image-container">
+                        <img src="{{ url_for('static', filename=result_img) }}?cache={{ range(1, 9999) | random }}" alt="Detection Results">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detection-results">
+                <h3>Detected Objects:</h3>
+                
+                {% if detections %}
+                    <table class="detection-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Object</th>
+                                <th>Confidence</th>
+                                <th>Bounding Box (x1, y1, x2, y2)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for detection in detections %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ detection.class }}</td>
+                                    <td>
+                                        <span class="confidence-badge">{{ detection.confidence }}%</span>
+                                    </td>
+                                    <td>{{ detection.bbox }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="no-detections">
+                        <p>No objects were detected in this image.</p>
+                    </div>
+                {% endif %}
+            </div>            <div class="action-buttons">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">Try Another Image</a>
+                <a href="{{ url_for('static', filename=result_img) }}?cache={{ range(1, 9999) | random }}" download class="btn btn-secondary">Download Result</a>
+                <a href="javascript:window.location.reload()" class="btn btn-secondary">Refresh Image</a>
+            </div>
+        </div>
+    </main>
+      <footer>
+        <p>Powered by YOLOv8 and Flask</p>
+    </footer>
+    
+    <script>
+        // Force images to reload bypassing cache
+        window.onload = function() {
+            const images = document.querySelectorAll('img');
+            images.forEach(img => {
+                const src = img.src;
+                if (src.indexOf('?') > -1) {
+                    img.src = src;
+                } else {
+                    img.src = src + '?cache=' + Math.random();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
