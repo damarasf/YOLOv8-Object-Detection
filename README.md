@@ -1,265 +1,110 @@
 # YOLOv8 Object Detection Web Application
 
-A modern Flask web application for object detection using YOLOv8 (You Only Look Once version 8). This application provides an intuitive web interface for uploading images and getting real-time object detection results with bounding boxes and confidence scores.
+A Flask web application for object detection using YOLOv8. Upload images through a web interface and get real-time object detection results with bounding boxes and confidence scores.
 
-## 🌟 Features
+## ✨ Features
 
-- **Real-time Object Detection**: Powered by YOLOv8 for fast and accurate object detection
-- **Web Interface**: Clean, modern, responsive web UI
-- **Drag & Drop Upload**: Easy file upload with drag-and-drop support
-- **80+ Object Classes**: Detects common objects like people, vehicles, animals, and more
+- **Object Detection**: Powered by YOLOv8 nano model for fast inference
+- **Web Interface**: Responsive web UI with drag & drop upload
 - **API Endpoints**: RESTful API for programmatic access
-- **Result Download**: Export detection results as JSON
-- **Mobile Friendly**: Responsive design works on all devices
-- **Error Handling**: Comprehensive error handling and logging
+- **80+ Object Classes**: Detects people, vehicles, animals, and common objects
+- **Result Visualization**: Images with bounding boxes and confidence scores
+- **File Management**: Automatic cleanup of old uploaded files
 
-## 🏗️ Project Structure
+## 📁 Project Structure
 
 ```
 yolov8-object-detection/
 ├── app.py                     # Main application entry point
+├── run.py                     # Alternative run script
+├── requirements.txt           # Python dependencies
 ├── config/                    # Configuration management
-│   ├── __init__.py
 │   └── settings.py           # App settings and configuration
 ├── models/                    # AI model handling
-│   ├── __init__.py
-│   ├── detector.py           # YOLOv8 model wrapper
-│   └── yolov8n.pt           # Model weights (downloaded automatically)
-├── routes/                    # Application routes
-│   ├── __init__.py
-│   ├── main.py              # Main web routes
-│   └── api.py               # API endpoints
+│   ├── detector.py           # YOLOv8 model wrapper (ObjectDetector class)
+│   └── yolov8n.pt           # Model weights
+├── routes/                    # Application routes (class-based)
+│   ├── main.py              # Web interface routes (Routes class)
+│   └── api.py               # API endpoints (APIRoutes class)
 ├── utils/                     # Utility functions
-│   ├── __init__.py
 │   ├── file_handler.py      # File upload and validation
 │   └── logger.py            # Logging configuration
 ├── templates/                 # HTML templates
-│   ├── index.html           # Home page
-│   ├── result.html          # Results page
+│   ├── index.html           # Upload page
+│   ├── result.html          # Results display
 │   └── error.html           # Error page
 ├── static/                    # Static assets
-│   ├── css/
-│   │   └── main.css         # Main stylesheet
-│   ├── js/
-│   │   └── main.js          # JavaScript functionality
+│   ├── css/main.css         # Stylesheet
+│   ├── js/main.js           # JavaScript functionality
 │   └── uploads/             # Uploaded images storage
-├── logs/                      # Application logs
-├── requirements.txt           # Python dependencies
-└── README.md                 # This file
+└── logs/                      # Application logs
 ```
 
-## 🚀 Quick Start
+## 🚀 Installation & Usage
 
 ### Prerequisites
+- Python 3.8+
+- pip package installer
 
-- Python 3.8 or higher
-- pip (Python package installer)
+### Quick Start
 
-### Installation
-
-1. **Clone or download the project**
-   ```powershell
-   git clone <https://github.com/damarasf/YOLOv8-Object-Detection.git>
-   cd yolov8-object-detection
-   ```
-
-2. **Install dependencies**
+1. **Install dependencies**
    ```powershell
    pip install -r requirements.txt
    ```
 
-3. **Run the application**
+2. **Run the application**
    ```powershell
    python app.py
+   # or alternatively
+   python run.py
    ```
 
-4. **Open your browser**
+3. **Open your browser**  
    Navigate to `http://localhost:5000`
 
-### Docker Installation (Optional)
+### Using the Application
 
-```dockerfile
-# Create a Dockerfile
-FROM python:3.9-slim
-
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-COPY . .
-
-EXPOSE 5000
-CMD ["python", "app.py"]
-```
-
-```powershell
-docker build -t yolov8-detector .
-docker run -p 5000:5000 yolov8-detector
-```
-
-## 🎯 Usage
-
-### Web Interface
-
-1. **Upload Image**: Drag and drop or click to upload an image (JPG, PNG, GIF)
-2. **Detect Objects**: Click "Detect Objects" to analyze the image
+1. **Upload Image**: Drag and drop or click to upload (JPG, PNG, GIF supported)
+2. **Detect Objects**: Click "Detect Objects" to analyze the image  
 3. **View Results**: See detected objects with bounding boxes and confidence scores
-4. **Download Results**: Export detection data as JSON
 
 ### API Endpoints
 
-#### Health Check
-```powershell
-curl http://localhost:5000/api/health
-```
-
-#### Model Information
-```powershell
-curl http://localhost:5000/api/model-info
-```
-
-#### Object Detection
-```powershell
-curl -X POST -F "file=@image.jpg" http://localhost:5000/api/detect
-```
-
-Example API response:
-```json
-{
-  "success": true,
-  "data": {
-    "filename": "unique_filename.jpg",
-    "total_objects": 3,
-    "detections": [
-      {
-        "class": "person",
-        "confidence": 89.5,
-        "bbox": [100, 150, 300, 450],
-        "class_id": 0
-      }
-    ]
-  }
-}
-```
+- **Health Check**: `GET /api/health`
+- **Model Info**: `GET /api/model-info`
+- **Object Detection**: `POST /api/detect` (with image file)
 
 ## ⚙️ Configuration
 
-### Environment Variables
+Key settings in `config/settings.py`:
+- **Model confidence threshold**: 0.25 (default)
+- **Max file size**: 16MB
+- **Supported formats**: PNG, JPG, JPEG, GIF
+- **Upload folder**: `static/uploads/`
+- **Auto cleanup**: Files older than 24 hours
 
-- `FLASK_ENV`: Environment mode (`development`, `production`)
-- `SECRET_KEY`: Flask secret key for sessions
-- `PORT`: Application port (default: 5000)
+## 🎯 Supported Objects
 
-### Configuration Files
-
-Edit `config/settings.py` to customize:
-
-- Model confidence threshold
-- Upload folder location
-- Maximum file size
-- Logging settings
-- Model path
+YOLOv8 detects 80+ object classes including:
+- **People & Animals**: person, cat, dog, horse, bird, etc.
+- **Vehicles**: car, motorcycle, bus, truck, airplane, boat
+- **Common Objects**: chair, bottle, laptop, phone, book, etc.
 
 ## 🔧 Development
 
-### Project Architecture
+### Architecture
+- **Flask Factory Pattern**: `create_app()` in `app.py`
+- **Class-based Routes**: `Routes` and `APIRoutes` classes
+- **Model Wrapper**: `ObjectDetector` class for YOLOv8
+- **Configuration Management**: Environment-based config classes
 
-The application follows a modular architecture with clear separation of concerns:
+### Key Components
+- `models/detector.py`: YOLOv8 integration and inference
+- `routes/main.py`: Web interface handling
+- `routes/api.py`: RESTful API endpoints
+- `utils/file_handler.py`: File validation and processing
 
-- **Configuration**: Centralized settings management
-- **Models**: AI model abstraction and handling
-- **Routes**: Web routes and API endpoints
-- **Utils**: Utility functions and helpers
-- **Templates**: HTML templates with modern design
-- **Static**: CSS, JavaScript, and asset files
+## 📝 License
 
-### Code Quality
-
-The codebase includes:
-
-- Type hints and docstrings
-- Comprehensive error handling
-- Logging throughout the application
-- Input validation and sanitization
-- Responsive design patterns
-
-### Adding New Features
-
-1. **New Routes**: Add to `routes/main.py` or `routes/api.py`
-2. **Model Changes**: Modify `models/detector.py`
-3. **UI Updates**: Update templates and static files
-4. **Configuration**: Add settings to `config/settings.py`
-
-## 📊 Supported Object Classes
-
-YOLOv8 can detect 80 different object classes including:
-
-- **People**: person
-- **Vehicles**: car, motorcycle, airplane, bus, train, truck, boat
-- **Animals**: bird, cat, dog, horse, sheep, cow, elephant, bear, zebra, giraffe
-- **Sports**: frisbee, skis, snowboard, sports ball, kite, baseball bat, baseball glove, skateboard, surfboard, tennis racket
-- **Kitchen**: bottle, wine glass, cup, fork, knife, spoon, bowl, banana, apple, sandwich, orange, broccoli, carrot, hot dog, pizza, donut, cake
-- **Furniture**: chair, couch, potted plant, bed, dining table, toilet, tv, laptop, mouse, remote, keyboard, cell phone, microwave, oven, toaster, sink, refrigerator
-- **Electronics**: clock, vase, scissors, teddy bear, hair drier, toothbrush
-
-## 🚨 Error Handling
-
-The application includes comprehensive error handling for:
-
-- Invalid file formats
-- File size limits
-- Model loading failures
-- Network errors
-- Server errors
-
-All errors are logged and user-friendly error messages are displayed.
-
-## 📈 Performance
-
-- **Fast Detection**: Uses YOLOv8 nano model for speed
-- **Efficient Processing**: Optimized image handling
-- **Caching**: Static file caching for better performance
-- **Cleanup**: Automatic cleanup of old uploaded files
-
-## 🔒 Security
-
-- File type validation
-- File size limits
-- Secure filename handling
-- Input sanitization
-- Error message sanitization
-
-## 📝 Logging
-
-Logs are stored in the `logs/` directory and include:
-
-- Application startup/shutdown
-- User uploads and detections
-- Errors and warnings
-- Performance metrics
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- [Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics) for the object detection model
-- [Flask](https://flask.palletsprojects.com/) for the web framework
-- The open-source community for various tools and libraries
-
-## 📞 Support
-
-For support and questions:
-
-- Create an issue in the repository
-- Check the documentation
-- Review the error logs in `logs/app.log`
+MIT License - see the LICENSE file for details.

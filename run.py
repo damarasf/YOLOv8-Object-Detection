@@ -4,7 +4,7 @@ Run script for YOLOv8 Object Detection Application
 """
 import os
 import sys
-from app_new import create_app
+from app import create_app
 
 if __name__ == '__main__':
     # Set environment variables if not already set
