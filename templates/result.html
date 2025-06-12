@@ -83,22 +83,68 @@
             </p>
         </div>
     </header>    
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <!-- Results Summary -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">        <!-- Detection Summary -->
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-8 mb-6 sm:mb-8 transition-colors duration-300">
-            <div class="text-center">
-                {% if detections %}
+            {% if detections %}
+                <div class="text-center mb-6">
                     <div class="inline-flex items-center px-4 sm:px-6 py-3 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full mb-4">
                         <i class="fas fa-check-circle mr-2"></i>
-                        <span class="text-sm sm:text-base">Found <strong class="mx-1">{{ detections|length }}</strong> object(s) in your image</span>
+                        <span class="text-sm sm:text-base">Detection completed successfully</span>
                     </div>
-                {% else %}
+                </div>
+                
+                <!-- Quick Summary Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+                    <div class="text-center">
+                        <div class="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">{{ detections|length }}</div>
+                        <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Objects Found</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400 mb-1">{{ detections|map(attribute='class')|unique|list|length }}</div>
+                        <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Categories</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">{{ "%.1f"|format((detections|map(attribute='confidence')|sum / detections|length)) }}%</div>
+                        <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Avg Confidence</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl sm:text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1">{{ detections|selectattr('confidence', 'ge', 80)|list|length }}</div>
+                        <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-300">High Confidence</div>
+                    </div>
+                </div>
+                
+                <!-- Top Detected Objects -->
+                {% set object_counts = {} %}
+                {% for detection in detections %}
+                    {% if detection.class in object_counts %}
+                        {% set _ = object_counts.update({detection.class: object_counts[detection.class] + 1}) %}
+                    {% else %}
+                        {% set _ = object_counts.update({detection.class: 1}) %}
+                    {% endif %}
+                {% endfor %}
+                
+                <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 text-center">Most Detected Objects</h4>
+                    <div class="flex flex-wrap justify-center gap-2">
+                        {% for object_type, count in object_counts.items() %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 text-indigo-800 dark:text-indigo-300">
+                            <i class="fas fa-cube mr-1 text-xs"></i>
+                            {{ object_type|title }}
+                            {% if count > 1 %}
+                                <span class="ml-1 px-1.5 py-0.5 bg-indigo-200 dark:bg-indigo-800 rounded-full text-xs">{{ count }}</span>
+                            {% endif %}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center">
                     <div class="inline-flex items-center px-4 sm:px-6 py-3 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 rounded-full mb-4">
                         <i class="fas fa-exclamation-triangle mr-2"></i>
                         <span class="text-sm sm:text-base">No objects detected in the image</span>
                     </div>
-                {% endif %}
-            </div>
+                </div>
+            {% endif %}
         </div>
         
         <!-- Image Comparison -->
@@ -140,48 +186,19 @@
                     </div>
                 </div>
             </div>
-        </div>        
+        </div>          
         {% if detections %}
         <!-- Detection Details -->
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-8 mb-6 sm:mb-8 transition-colors duration-300">
             <h3 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
                 <i class="fas fa-list mr-3 text-purple-500"></i>
-                Detection Details
+                Individual Detections
             </h3>
-            
-            <!-- Summary Stats -->
-            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 sm:p-6 text-center">
-                    <div class="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">{{ detections|length }}</div>
-                    <div class="text-sm sm:text-base text-gray-600 dark:text-gray-300">Total Objects</div>
-                </div>
-                <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 sm:p-6 text-center">
-                    <div class="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400 mb-2">{{ detections|map(attribute='class')|unique|list|length }}</div>
-                    <div class="text-sm sm:text-base text-gray-600 dark:text-gray-300">Object Types</div>
-                </div>
-                <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 sm:p-6 text-center sm:col-span-2 lg:col-span-1">
-                    <div class="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">{{ "%.1f"|format((detections|map(attribute='confidence')|sum / detections|length)) }}%</div>
-                    <div class="text-sm sm:text-base text-gray-600 dark:text-gray-300">Avg Confidence</div>
-                </div>
-            </div>
-            
-            <!-- Object Types List -->
-            <div class="mb-6">
-                <h4 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3">Detected Object Types:</h4>
-                <div class="flex flex-wrap gap-2">
-                    {% for object_type in detections|map(attribute='class')|unique|list %}
-                    <span class="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300">
-                        <i class="fas fa-tag mr-1 text-xs"></i>
-                        {{ object_type|title }}
-                    </span>
-                    {% endfor %}
-                </div>
-            </div>
             
             <!-- Detection List -->
             <div class="space-y-3 sm:space-y-4">
-                <h4 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4">Individual Detections:</h4>
-                {% for detection in detections %}                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 sm:p-4 border-l-4 border-blue-500">
+                {% for detection in detections %}
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 sm:p-4 border-l-4 border-blue-500">
                     <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-2 gap-2">
                         <div class="flex items-center space-x-2 sm:space-x-3">
                             <i class="fas fa-cube text-blue-500 text-sm"></i>
@@ -275,22 +292,7 @@
                         <i class="fas fa-code mr-2"></i>
                         Export JSON
                     </button>
-                </div>
-            </div>
-            
-            <!-- Quick Share Info -->
-            <div class="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border-l-4 border-blue-500">
-                <div class="flex items-start">
-                    <i class="fas fa-info-circle text-blue-500 mr-3 mt-0.5 flex-shrink-0"></i>
-                    <div>
-                        <h5 class="text-sm font-semibold text-gray-900 dark:text-white mb-1">Detection Summary</h5>
-                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-                            Found <strong>{{ detections|length }} objects</strong> across <strong>{{ detections|map(attribute='class')|unique|list|length }} categories</strong> 
-                            with <strong>{{ "%.1f"|format((detections|map(attribute='confidence')|sum / detections|length)) }}%</strong> average confidence
-                        </p>
-                    </div>
-                </div>
-            </div>
+                </div>            </div>
         </div>
         {% else %}
         <!-- No Detection Message -->
